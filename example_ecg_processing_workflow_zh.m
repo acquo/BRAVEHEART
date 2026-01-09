@@ -55,8 +55,17 @@ fprintf('==========================================\n');
 
 % 設置文件路徑和格式
 % 注意：請根據您的實際文件修改以下路徑和格式
-ecg_filename = 'example_ecg.xml';  % ECG 文件名
+% 示例文件可以從 'Example ECGs' 目錄中選擇
+ecg_filename = 'example_ecg.xml';  % ECG 文件名（請修改為實際文件路徑）
 ecg_format = 'muse_xml';           % 文件格式
+
+% 檢查文件是否存在
+if ~exist(ecg_filename, 'file')
+    error(['錯誤：文件不存在: %s\n\n' ...
+           '請修改 ecg_filename 變量指向您的實際 ECG 文件。\n' ...
+           '您可以使用 BRAVEHEART 的 ''Example ECGs'' 目錄中的示例文件。'], ...
+           ecg_filename);
+end
 
 % 支持的格式列表：
 % - 'muse_xml'      : GE MUSE XML 格式
@@ -551,18 +560,25 @@ fprintf('\n==========================================\n');
 fprintf('步驟 6: 生成中位數心搏\n');
 fprintf('==========================================\n');
 
-if num_beats < 3
-    fprintf('⚠ 警告: 檢測到的心搏數量 (%d) 不足，建議至少 3 個心搏\n', num_beats);
+% 定義中位數心搏所需的最小心搏數
+MIN_BEATS_FOR_MEDIAN = 3;  % 至少需要 3 個心搏才能計算有意義的中位數
+
+if num_beats < MIN_BEATS_FOR_MEDIAN
+    fprintf('⚠ 警告: 檢測到的心搏數量 (%d) 不足，建議至少 %d 個心搏\n', ...
+        num_beats, MIN_BEATS_FOR_MEDIAN);
     fprintf('跳過中位數心搏生成步驟\n');
 else
     fprintf('正在生成中位數心搏...\n');
     fprintf('  使用心搏數: %d\n', num_beats);
     
     try
-        % 定義心搏窗口
+        % 定義心搏窗口參數（可根據需要調整）
+        % 這些參數定義了提取心搏的時間窗口
+        PRE_R_WINDOW_MS = 200;   % R 波前的時間窗口（毫秒）
+        POST_R_WINDOW_MS = 400;  % R 波後的時間窗口（毫秒）
         % 窗口範圍：R 波前 200 ms 到 R 波後 400 ms
-        pre_ms = 200;   % R 波前的毫秒數
-        post_ms = 400;  % R 波後的毫秒數
+        pre_ms = PRE_R_WINDOW_MS;
+        post_ms = POST_R_WINDOW_MS;
         
         pre_samples = round(pre_ms * vcg.hz / 1000);   % 轉換為樣本數
         post_samples = round(post_ms * vcg.hz / 1000); % 轉換為樣本數
